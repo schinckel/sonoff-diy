@@ -6,7 +6,7 @@ A tool to help automate applying a new firmware to a Sonoff DIY device.
 
 2. Install `http-server`
 
-    $ npm install
+    `$ npm install`
 
 3. Prepare your network
 
@@ -20,4 +20,4 @@ A tool to help automate applying a new firmware to a Sonoff DIY device.
 
 4. Start the flash:
 
-    $ ./flasher.sh
+    `$ ./flasher.sh`
