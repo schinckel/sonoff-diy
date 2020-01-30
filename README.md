@@ -22,4 +22,4 @@ A tool to help automate applying a new firmware to a Sonoff DIY device.
 
         $ ./flasher.sh
 
-This should then run to completeion. Please let me know if you have any issues: I only had one Sonoff DIY device, and have already flashed that one, so was unable to try the automated process.
+This should then run to completion. Please let me know if you have any issues: I only had one Sonoff DIY device, and have already flashed that one, so was unable to try the automated process.
