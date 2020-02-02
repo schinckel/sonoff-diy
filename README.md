@@ -11,7 +11,7 @@ A tool to help automate applying a new firmware to a Sonoff DIY device.
 3. Prepare your network
 
   * Start a network with SSID `sonoffDiy`, WPA2 key `20170618sn`
-	This must have access to the internet, and to the machine you 
+	This must have access to the internet, and to the machine you
 	are running this code from.
   * Unplug your Sonoff Mini/DIY device
   * Add the supplied jumper to the DIY pin (GPIO16)
@@ -22,4 +22,6 @@ A tool to help automate applying a new firmware to a Sonoff DIY device.
 
         $ ./flasher.sh
 
-This should then run to completion. Please let me know if you have any issues: I only had one Sonoff DIY device, and have already flashed that one, so was unable to try the automated process.
+This should then run to completion. By default, it waits 30 seconds for the upload to complete - that was plenty for me but I did have the AP right next to the Sonoff Mini.
+
+Please let me know if you have any issues: I only had one Sonoff DIY device, and have already flashed that one, so was unable to try the automated process.
