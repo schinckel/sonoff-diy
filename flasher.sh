@@ -3,19 +3,19 @@
 # TODO: Look for files/firmware.bin and complain if it's not there.
 
 # Start our HTTP server as early as possible.
-node_modules/.bin/http-server files -s & 
+node_modules/.bin/http-server files &
 HTTP_PID=$(echo $!)
 echo -e "\033[32m✓\033[0m Started an HTTP server on port 8080."
 
 FIRMWARE='files/firmware.bin'
-SHA256SUM=$(shasum -a 256 files/firmware.bin | cut -d ' ' -f 1)
+SHA256SUM=$(shasum -a 256 $FIRMWARE | cut -d ' ' -f 1)
 
 # TODO: Use our spinner in the places where we wait.
 SPINNER='⋮⋰⋯⋱'
 
 # We want to stop our mDNS query after 1 second: the device should be there
 # already.
-function timeout() { 
+function timeout() {
 	_ALARM=$(perl -e 'alarm shift; exec @ARGV' "$@") ;
 	echo $_ALARM
 }
@@ -40,47 +40,62 @@ echo -e "\033[32m✓\033[0m Found a Sonoff DIY device with id \033[34m${DEVICE_I
 
 echo "⋯ Attempting to unlock OTA mode"
 
-curl http://${NAME}.local:8081/zeroconf/unlock_ota \
+OTA_UNLOCK=$(curl http://${NAME}.local:8081/zeroconf/ota_unlock \
 	-X POST \
 	--data "{
 		\"deviceid\": \"${DEVICE_ID}\",
 		\"data\":{}
-	}"
+	}" | jq .error)
 
-if [ $? -eq 0 ]
+if [ $OTA_UNLOCK -eq 0 ]
 then
   echo -e "\033[32m✓\033[0m Unlocked OTA mode"
 else
   echo -e "\033[31m⚠︎\033[0m Could not unlock OTA mode" >&2
+  echo $OTA_UNLOCK
   kill $HTTP_PID
   echo -e "\033[32m✓\033[0m Stopped HTTP server."
   exit 2
 fi
 
+# DEBUG
+
+curl http://${NAME}.local:8081/zeroconf/info \
+	-X POST \
+	--data "{
+		\"deviceid\": \"${DEVICE_ID}\",
+		\"data\":{}
+	}" | jq .
+
 # Flash firmware
 
 echo "⋯ Attempting to update firmware OTA"
-
-curl http://${NAME}.local:8081/zeroconf/ota_flash \
+IP_ADDRESS=$(ping $(hostname) -c 1 | grep 'bytes from .*:' | cut -d ' ' -f 4 | cut -d ':' -f 1)
+OTA_UPDATE=$(curl http://${NAME}.local:8081/zeroconf/ota_flash \
 	-X POST \
 	--data "{
 		\"deviceid\": \"${DEVICE_ID}\",
 		\"data\":{
-			\"downloadURL\": \"http://$(hostname):8080/firmware.bin\",
+			\"downloadURL\": \"http://$IP_ADDRESS:8080/firmware.bin\",
 			\"sha256sum\":\"${SHA256SUM}\"
 		}
-	}"
+	}" | jq .error)
 
-if [ $? -eq 0 ]
+if [ $OTA_UPDATE -eq 0 ]
 then
-  echo -e "\033[32m✓\033[0m Successfully updated firmware"
+  echo -e "\033[32m✓\033[0m Successfully started updating firmware"
 else
   echo "\033[31m⚠︎\033[0m Could not update firmware" >&2
+  echo $OTA_UPDATE
   kill $HTTP_PID
   echo -e "\033[32m✓\033[0m Stopped HTTP server."
   exit 3
 fi
-	
+
+# We need to watch the logs from the HTTP server and look for a POST to /api/device/otaFlash
+
+sleep 30
+
 kill $HTTP_PID
 
 echo -e "\033[32m✓\033[0m Stopped HTTP server."
