@@ -1,8 +1,6 @@
 #! /bin/bash
 
 # TODO: Look for files/firmware.bin and complain if it's not there.
-
-# Start our HTTP server as early as possible.
 node_modules/.bin/http-server files &
 HTTP_PID=$(echo $!)
 echo -e "\033[32m✓\033[0m Started an HTTP server on port 8080."
@@ -40,7 +38,7 @@ echo -e "\033[32m✓\033[0m Found a Sonoff DIY device with id \033[34m${DEVICE_I
 
 echo "⋯ Attempting to unlock OTA mode"
 
-OTA_UNLOCK=$(curl http://${NAME}.local:8081/zeroconf/ota_unlock \
+OTA_UNLOCK=$(curl -s http://${NAME}.local:8081/zeroconf/ota_unlock \
 	-X POST \
 	--data "{
 		\"deviceid\": \"${DEVICE_ID}\",
@@ -60,18 +58,19 @@ fi
 
 # DEBUG
 
-curl http://${NAME}.local:8081/zeroconf/info \
+curl -s http://${NAME}.local:8081/zeroconf/info \
 	-X POST \
 	--data "{
 		\"deviceid\": \"${DEVICE_ID}\",
 		\"data\":{}
 	}" | jq .
 
+
 # Flash firmware
 
 echo "⋯ Attempting to update firmware OTA"
 IP_ADDRESS=$(ping $(hostname) -c 1 | grep 'bytes from .*:' | cut -d ' ' -f 4 | cut -d ':' -f 1)
-OTA_UPDATE=$(curl http://${NAME}.local:8081/zeroconf/ota_flash \
+OTA_UPDATE=$(curl -s http://${NAME}.local:8081/zeroconf/ota_flash \
 	-X POST \
 	--data "{
 		\"deviceid\": \"${DEVICE_ID}\",
